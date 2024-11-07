@@ -1,0 +1,2 @@
+graphviz==0.20.1
+typing-extensions>=4.0.0
