@@ -51,9 +51,9 @@ class DFA:
             {当前状态: {输入符号: 目标状态}}
         :param accept_states: 接受状态集合
         """
-        self.start_state = None
-        self.alphabet = alphabet - {'ε'}
-        self.transitions = {}
+        self.start_state = None  # 改为整数类型
+        self.alphabet = alphabet - {'ε'} if isinstance(alphabet, set) else set(alphabet)
+        self.transitions = {}    # {state: {symbol: next_state}}
         self.accept_states = set()
         
     def visualize(self, filename='dfa'):
@@ -63,7 +63,7 @@ class DFA:
         
         # 添加开始状态标记
         dot.node('start', '', shape='point')
-        dot.edge('start', str(list(self.start_state)))
+        dot.edge('start', str(self.start_state))
         
         # 添加所有状态
         all_states = set(self.transitions.keys())
@@ -73,14 +73,14 @@ class DFA:
         
         for state in all_states:
             if state in self.accept_states:
-                dot.node(str(list(state)), str(list(state)), shape='doublecircle')
+                dot.node(str(state), str(state), shape='doublecircle')
             else:
-                dot.node(str(list(state)), str(list(state)), shape='circle')
+                dot.node(str(state), str(state), shape='circle')
         
         # 添加转换边
         for state, trans in self.transitions.items():
             for symbol, target in trans.items():
-                dot.edge(str(list(state)), str(list(target)), label=str(symbol))
+                dot.edge(str(state), str(target), label=str(symbol))
         
         dot.render(filename, view=True, format='png')
 
