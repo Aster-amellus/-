@@ -1,5 +1,5 @@
 from collections import deque
-
+from graphviz import Digraph
 
 class NFA:
     def __init__(self, start_state, alphabet, transitions, accept_states):
@@ -17,6 +17,30 @@ class NFA:
         self.transitions = transitions
         self.accept_states = accept_states
         
+    def visualize(self, filename='nfa'):
+        """将NFA可视化为图形"""
+        dot = Digraph(comment='NFA Visualization')
+        dot.attr(rankdir='LR')  # 从左到右的布局
+        
+        # 添加开始状态标记
+        dot.node('start', '', shape='point')
+        dot.edge('start', str(self.start_state))
+        
+        # 添加所有状态
+        for state in self.transitions.keys():
+            if state in self.accept_states:
+                dot.node(str(state), str(state), shape='doublecircle')
+            else:
+                dot.node(str(state), str(state), shape='circle')
+        
+        # 添加转换边
+        for state, trans in self.transitions.items():
+            for symbol, targets in trans.items():
+                for target in targets:
+                    dot.edge(str(state), str(target), label=str(symbol))
+        
+        dot.render(filename, view=True, format='png')
+
 class DFA:
     def __init__(self, alphabet):
         """
@@ -32,6 +56,41 @@ class DFA:
         self.transitions = {}
         self.accept_states = set()
         
+    def visualize(self, filename='dfa'):
+        """将DFA可视化为图形"""
+        dot = Digraph(comment='DFA Visualization')
+        dot.attr(rankdir='LR')
+        
+        # 添加开始状态标记
+        dot.node('start', '', shape='point')
+        dot.edge('start', str(list(self.start_state)))
+        
+        # 添加所有状态
+        all_states = set(self.transitions.keys())
+        for target_dict in self.transitions.values():
+            for target in target_dict.values():
+                all_states.add(target)
+        
+        for state in all_states:
+            if state in self.accept_states:
+                dot.node(str(list(state)), str(list(state)), shape='doublecircle')
+            else:
+                dot.node(str(list(state)), str(list(state)), shape='circle')
+        
+        # 添加转换边
+        for state, trans in self.transitions.items():
+            for symbol, target in trans.items():
+                dot.edge(str(list(state)), str(list(target)), label=str(symbol))
+        
+        dot.render(filename, view=True, format='png')
+
+# 1. ε-闭包计算
+"""
+epsilon_closure函数的工作原理：
+1. 输入一个状态集合
+2. 通过深度优先搜索找到所有通过ε转换可达的状态
+3. 返回包含所有可达状态的集合
+"""
 def epsilon_closure(nfa, states):
     """计算NFA状态集合的ε闭包"""
     closure = set(states)
@@ -47,6 +106,13 @@ def epsilon_closure(nfa, states):
                 
     return closure
 
+# 2. move函数实现
+"""
+move函数的工作原理：
+1. 输入一个状态集合和一个输入符号
+2. 找出从这些状态通过该输入符号可以到达的所有状态
+3. 返回目标状态的集合
+"""
 def move(nfa, states, symbol):
     next_states = set()
     for state in states:
@@ -55,6 +121,17 @@ def move(nfa, states, symbol):
             
     return next_states
 
+# 3. 子集构造算法(subset_construction)
+"""
+核心转换步骤：
+1. 计算起始状态的ε-闭包作为DFA的起始状态
+2. 使用队列处理未处理的状态
+3. 对每个状态和每个输入符号：
+   - 计算move后的状态集合
+   - 计算该集合的ε-闭包
+   - 将新状态加入DFA
+4. 确定接受状态：如果DFA的某个状态集合包含NFA的接受状态，则该状态为接受状态
+"""
 def subset_construction(nfa):
     dfa = DFA(nfa.alphabet)
     start_closure = frozenset(epsilon_closure(nfa, {nfa.start_state}))
@@ -87,23 +164,32 @@ def subset_construction(nfa):
             
     return dfa
     
-# 示例 NFA 定义
-nfa_transitions = {
-    'q0': {'a': ['q1'], 'ε': ['q2']},
-    'q1': {'b': ['q1'], 'ε': ['q3']},
-    'q2': {'c': ['q2'], 'ε': ['q3']},
-    'q3': {}
-}
-nfa_alphabet = {'a', 'b', 'c', 'ε'}
-nfa = NFA(start_state='q0', accept_states={'q3'}, transitions=nfa_transitions, alphabet=nfa_alphabet)
-
-# 运行子集构造法
-dfa = subset_construction(nfa)
-
-# 输出 DFA 结果
-print("DFA Start State:", dfa.start_state)
-print("DFA Accept States:", dfa.accept_states)
-print("DFA Transitions:")
-for state, transitions in dfa.transitions.items():
-    for symbol, next_state in transitions.items():
-        print(f"{state} --{symbol}--> {next_state}")
+# 示例代码部分修改为：
+if __name__ == "__main__":
+    # 示例 NFA 定义
+    nfa_transitions = {
+        'q0': {'a': ['q1'], 'ε': ['q2']},
+        'q1': {'b': ['q1'], 'ε': ['q3']},
+        'q2': {'c': ['q2'], 'ε': ['q3']},
+        'q3': {}
+    }
+    nfa_alphabet = {'a', 'b', 'c', 'ε'}
+    nfa = NFA(start_state='q0', accept_states={'q3'}, 
+              transitions=nfa_transitions, alphabet=nfa_alphabet)
+    
+    # 生成NFA的图形
+    nfa.visualize('nfa_example')
+    
+    # 转换为DFA
+    dfa = subset_construction(nfa)
+    
+    # 生成DFA的图形
+    dfa.visualize('dfa_example')
+    
+    # 输出 DFA 结果
+    print("DFA Start State:", dfa.start_state)
+    print("DFA Accept States:", dfa.accept_states)
+    print("DFA Transitions:")
+    for state, transitions in dfa.transitions.items():
+        for symbol, next_state in transitions.items():
+            print(f"{state} --{symbol}--> {next_state}")
