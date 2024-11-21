@@ -12,7 +12,6 @@ TEST_REGEX_LIST = [
 ]
 
 class TestRe2NFA(unittest.TestCase):
-    # 删除 setUp 方法，因为不再需要它
     
     def test_regex_to_postfix(self):
         self.assertEqual(regex_to_postfix("a.b"), "ab.")

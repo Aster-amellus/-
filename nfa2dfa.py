@@ -84,15 +84,13 @@ class DFA:
         
         dot.render(filename, view=True, format='png')
 
-# 1. ε-闭包计算
-"""
-epsilon_closure函数的工作原理：
-1. 输入一个状态集合
-2. 通过深度优先搜索找到所有通过ε转换可达的状态
-3. 返回包含所有可达状态的集合
-"""
-def epsilon_closure(nfa, states):
-    """计算NFA状态集合的ε闭包"""
+def epsilon_closure(nfa, states):   
+    """
+    ε-闭包计算：
+    1. 输入一个状态集合
+    2. 通过深度优先搜索找到所有通过ε转换可达的状态
+    3. 返回包含所有可达状态的集合
+    """
     closure = set(states)
     stack = list(states)
     
@@ -106,14 +104,14 @@ def epsilon_closure(nfa, states):
                 
     return closure
 
-# 2. move函数实现
-"""
-move函数的工作原理：
-1. 输入一个状态集合和一个输入符号
-2. 找出从这些状态通过该输入符号可以到达的所有状态
-3. 返回目标状态的集合
-"""
+
 def move(nfa, states, symbol):
+    """
+    move函数实现：
+    1. 输入一个状态集合和一个输入符号
+    2. 找出从这些状态通过该输入符号可以到达的所有状态
+    3. 返回目标状态的集合
+    """
     next_states = set()
     for state in states:
         if symbol in nfa.transitions[state]:
@@ -121,18 +119,18 @@ def move(nfa, states, symbol):
             
     return next_states
 
-# 3. 子集构造算法(subset_construction)
-"""
-核心转换步骤：
-1. 计算起始状态的ε-闭包作为DFA的起始状态
-2. 使用队列处理未处理的状态
-3. 对每个状态和每个输入符号：
-   - 计算move后的状态集合
-   - 计算该集合的ε-闭包
-   - 将新状态加入DFA
-4. 确定接受状态：如果DFA的某个状态集合包含NFA的接受状态，则该状态为接受状态
-"""
+
 def subset_construction(nfa):
+    """
+    子集构造：
+    1. 计算起始状态的ε-闭包作为DFA的起始状态
+    2. 使用队列处理未处理的状态
+    3. 对每个状态和每个输入符号：
+    - 计算move后的状态集合
+    - 计算该集合的ε-闭包
+    - 将新状态加入DFA
+    4. 确定接受状态：如果DFA的某个状态集合包含NFA的接受状态，则该状态为接受状态
+    """
     dfa = DFA(nfa.alphabet)
     start_closure = frozenset(epsilon_closure(nfa, {nfa.start_state}))
     dfa.start_state = start_closure
